@@ -13,3 +13,8 @@ default_q: [
 ]
 cspace_to_urdf_rules: []
 composite_task_spaces: []
+
+#collision_spheres:
+#    - panda_link0:
+#        - "center": [0.0, 0.0, 0.05]
+#          "radius": 0.08

@@ -1,6 +1,6 @@
 import omni.isaac.motion_generation as mg
 from omni.isaac.core.articulations import Articulation
-
+import pathlib
 
 class XArmRMPFlowController(mg.MotionPolicyController):
     """[summary]
@@ -15,11 +15,12 @@ class XArmRMPFlowController(mg.MotionPolicyController):
     def __init__(
         self, name: str, robot_articulation: Articulation, physics_dt: float = 1.0 / 60.0
     ) -> None:
+        current_directory = str(pathlib.Path(__file__).parent.resolve()).replace("\\", "/")
 
         self.rmp_flow = mg.lula.motion_policies.RmpFlow(
-            robot_description_path="C:/users/matth/appdata/local/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples/XArm/XArm/xarm_descriptor.yaml",
-            urdf_path="C:/users/matth/appdata/local/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples/XArm/XArm/xarm.urdf",
-            rmpflow_config_path="C:/users/matth/appdata/local/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples/XArm/XArm/xarm_rmpflow_common.yaml",
+            robot_description_path=current_directory + "/XArm/xarm_descriptor.yaml",
+            urdf_path=current_directory + "/XArm/xarm.urdf",
+            rmpflow_config_path=current_directory + "/XArm/xarm_rmpflow_common.yaml",
             end_effector_frame_name="link7",
             maximum_substep_size=0.00334,
             ignore_robot_state_updates=False,

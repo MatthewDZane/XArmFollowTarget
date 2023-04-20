@@ -3,6 +3,7 @@ import numpy as np
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.prims.rigid_prim import RigidPrim
 from omni.isaac.core.utils.stage import add_reference_to_stage
+import pathlib
 
 
 class XArm(Robot):
@@ -25,7 +26,8 @@ class XArm(Robot):
     ) -> None:
         self._end_effector = None
 
-        add_reference_to_stage(usd_path="C:/users/matth/appdata/local/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples/XArm/XArm/xarm.usd", prim_path="/World/XArm")
+        current_directory = str(pathlib.Path(__file__).parent.resolve()).replace("\\", "/")
+        add_reference_to_stage(usd_path=current_directory + "/XArm/xarm.usd", prim_path="/World/XArm")
 
         self._end_effector_prim_path = prim_path + "/link7"
 
