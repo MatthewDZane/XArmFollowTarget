@@ -1,6 +1,7 @@
 from omni.isaac.examples.base_sample import BaseSample
 from omni.isaac.examples.user_examples.XArm.xarm_follow_target import XArmFollowTarget
 from omni.isaac.examples.user_examples.XArm.xarm_rmpflow_controller import XArmRMPFlowController
+import numpy as np
 
 class XArmSample(BaseSample):
     def __init__(self) -> None:
@@ -47,6 +48,8 @@ class XArmSample(BaseSample):
             target_end_effector_position=observations[self._task_params["target_name"]["value"]]["position"],
             target_end_effector_orientation=observations[self._task_params["target_name"]["value"]]["orientation"],
         )
+        
+        self._articulation_controller.set_gains(1e15*np.ones(7), 1e14*np.ones(7)) # Solution from Nvidia Live Session 1:23:00
         self._articulation_controller.apply_action(actions)
         return
 

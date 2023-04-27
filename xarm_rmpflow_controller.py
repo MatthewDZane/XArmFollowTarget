@@ -22,7 +22,7 @@ class XArmRMPFlowController(mg.MotionPolicyController):
             urdf_path=current_directory + "/XArm/xarm.urdf",
             rmpflow_config_path=current_directory + "/XArm/xarm_rmpflow_common.yaml",
             end_effector_frame_name="link7",
-            maximum_substep_size=0.00334,
+            maximum_substep_size=0.0334,
             ignore_robot_state_updates=False,
         )
 
