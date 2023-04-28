@@ -14,6 +14,7 @@ from .xarm_follow_target import XArmFollowTarget
 from .xarm_rmpflow_controller import XArmRMPFlowController
 from omni.isaac.core import World
 import time
+import numpy as np
 
 def main():
     my_world = World(stage_units_in_meters=1.0)
@@ -44,6 +45,7 @@ def main():
                 target_end_effector_position=observations[target_name]["position"],
                 target_end_effector_orientation=observations[target_name]["orientation"],
             )
+            articulation_controller.set_gains(1e15*np.ones(7), 1e14*np.ones(7))
             articulation_controller.apply_action(actions)
 
     simulation_app.close()

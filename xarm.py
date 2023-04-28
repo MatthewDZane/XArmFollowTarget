@@ -27,7 +27,7 @@ class XArm(Robot):
         self._end_effector = None
 
         current_directory = str(pathlib.Path(__file__).parent.resolve()).replace("\\", "/")
-        add_reference_to_stage(usd_path=current_directory + "/XArm/xarm.usd", prim_path="/World/XArm")
+        add_reference_to_stage(usd_path=current_directory + "/XArm/xarm.usd", prim_path=prim_path)
 
         self._end_effector_prim_path = prim_path + "/link7"
 

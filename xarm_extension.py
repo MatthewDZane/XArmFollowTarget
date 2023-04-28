@@ -4,7 +4,7 @@ from omni.isaac.examples.base_sample import BaseSampleExtension
 from omni.isaac.examples.user_examples import XArmSample
 import omni.ui as ui
 from omni.isaac.ui.ui_utils import btn_builder, str_builder, state_btn_builder
-
+import carb
 
 class XArmExtension(BaseSampleExtension):
     def on_startup(self, ext_id: str):
@@ -81,6 +81,7 @@ class XArmExtension(BaseSampleExtension):
         return
 
     def shutdown_cleanup(self):
+        self.sample._shut_down_socket()
         return
 
     def build_task_controls_ui(self, frame):

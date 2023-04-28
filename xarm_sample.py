@@ -2,17 +2,47 @@ from omni.isaac.examples.base_sample import BaseSample
 from omni.isaac.examples.user_examples.XArm.xarm_follow_target import XArmFollowTarget
 from omni.isaac.examples.user_examples.XArm.xarm_rmpflow_controller import XArmRMPFlowController
 import numpy as np
+import threading
+import socket
+import carb
 
 class XArmSample(BaseSample):
     def __init__(self) -> None:
         super().__init__()
         self._controller = None
         self._articulation_controller = None
+        self._socket = None
+        self._conn = None
 
     def setup_scene(self):
         world = self.get_world()
         world.add_task(XArmFollowTarget(world))
         return
+    
+    def _setup_socket(self):
+        if self._socket is None:
+            self._socket = socket.socket()
+            port = 12345
+            self._socket.bind(('', port))
+        self._socket.listen(5)
+        self._conn, self.addr = self._socket.accept()
+
+        if self._xarm:
+            if self._xarm.get_joint_positions() is not None:
+                sendData = str(self._xarm.get_joint_positions().tolist())
+                self._conn.send(sendData.encode())
+
+    def _shut_down_socket(self):
+        if self._conn:
+            self._conn.send("Done".encode())
+            self._conn.close()
+            self._conn = None
+            try:
+                self._socket.shutdown(socket.SHUT_RDWR)
+                self._socket.close()
+                self._socket = None
+            except socket.error as e:
+                pass
 
     async def setup_pre_reset(self):
         world = self.get_world()
@@ -23,14 +53,18 @@ class XArmSample(BaseSample):
 
     def world_cleanup(self):
         self._controller = None
+        self._shut_down_socket()
         return
 
     async def setup_post_load(self):
         self._xarm_task = list(self._world.get_current_tasks().values())[0]
         self._task_params = self._xarm_task.get_params()
-        my_xarm = self._world.scene.get_object(self._task_params["robot_name"]["value"])
-        self._controller = XArmRMPFlowController(name="target_follower_controller", robot_articulation=my_xarm)
-        self._articulation_controller = my_xarm.get_articulation_controller()
+        self._xarm = self._world.scene.get_object(self._task_params["robot_name"]["value"])
+        self._controller = XArmRMPFlowController(name="target_follower_controller", robot_articulation=self._xarm)
+        self._articulation_controller = self._xarm.get_articulation_controller()
+
+        self._socket_thread = threading.Thread(target=self._setup_socket)
+        self._socket_thread.start()
         return
 
     async def _on_follow_target_event_async(self, val):
@@ -51,6 +85,9 @@ class XArmSample(BaseSample):
         
         self._articulation_controller.set_gains(1e15*np.ones(7), 1e14*np.ones(7)) # Solution from Nvidia Live Session 1:23:00
         self._articulation_controller.apply_action(actions)
+
+        sendData = str(self._xarm.get_joint_positions().tolist())
+        self._conn.send(sendData.encode())
         return
 
     def _on_add_obstacle_event(self):
