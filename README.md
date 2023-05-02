@@ -1,21 +1,19 @@
-place in this path for now
-/home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples
+1. Clone the repo
 
-• After downloading rename the folder "XArm" git by default changes the names to lower case.
+2. place in this path to run:
+```/home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples```
 
-In the examples folder you will need to add 2 lines to the __init__.py file there (Not in the XArm folder) 
+3. Rename the folder **xarm** to **XArm**
 
-<br> 
-
-NOTE: Import here your extension examples to be propagated to ISAAC SIM Extensions startupbr
-- from omni.isaac.examples.user_examples.XArm.xarm_sample import XArmSample
-
-- from omni.isaac.examples.user_examples.XArm.xarm_extension import XArmExtension
+4. In the examples folder you will need to add 2 lines to the **__init__.py** file there (not in the XArm folder) 
 
 
+NOTE: Import here your extension examples to be propagated to ISAAC SIM Extensions startup
+```
+from omni.isaac.examples.user_examples.XArm.xarm_sample import XArmSample
+from omni.isaac.examples.user_examples.XArm.xarm_extension import XArmExtension
+```
 
+5.  After this runs you should see the XArm extension in the Example drop down in the Isaac-sim gui
 
-
-After this runs you should see the XArm extension in the Example drop down in the Isaac-sim gui
-
-To recieve the position output run the client.py script found int he folder, the server.py runs by default. once the example is loaded. 
+6. To recieve the position output run the **client.py** script found in the folder, the **server.py** runs by default once the example is loaded. 
