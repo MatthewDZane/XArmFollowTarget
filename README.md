@@ -5,7 +5,7 @@
 /home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples
 ```
 
-3. Rename the folder **xarm** to **XArm**
+3. Rename the folder **xarm/** to **XArm/**
 
 4. In the examples folder you will need to add 2 lines to the **__init__.py** file there (not in the XArm folder) 
 
