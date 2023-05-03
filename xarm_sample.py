@@ -87,7 +87,8 @@ class XArmSample(BaseSample):
         self._articulation_controller.apply_action(actions)
 
         sendData = str(self._xarm.get_joint_positions().tolist())
-        self._conn.send(sendData.encode())
+        if (self._conn):
+            self._conn.send(sendData.encode())
         return
 
     def _on_add_obstacle_event(self):
