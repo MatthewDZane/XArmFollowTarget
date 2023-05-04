@@ -22,9 +22,13 @@ class XArmSample(BaseSample):
     def _setup_socket(self):
         if self._socket is None:
             self._socket = socket.socket()
+            # allow socket to reuse address
+            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             port = 12345
             self._socket.bind(('', port))
-        self._socket.listen(5)
+        
+        # https://docs.python.org/3/library/socket.html#socket.socket.listen
+        self._socket.listen(5) # number of unaccepted connections allow (backlog)
         self._conn, self.addr = self._socket.accept()
 
         if self._xarm:
@@ -34,10 +38,8 @@ class XArmSample(BaseSample):
 
     def _shut_down_socket(self):
         if self._conn:
-            self._conn.send("Done".encode())
-            self._conn.close()
-            self._conn = None
             try:
+                # self._conn.send("Done".encode())
                 self._socket.shutdown(socket.SHUT_RDWR)
                 self._socket.close()
                 self._socket = None
@@ -88,7 +90,11 @@ class XArmSample(BaseSample):
 
         sendData = str(self._xarm.get_joint_positions().tolist())
         if (self._conn):
-            self._conn.send(sendData.encode())
+            try: 
+                self._conn.send(sendData.encode())
+            except:
+                # if sending failed, recreate the socket and reconnect
+                self._setup_socket()
         return
 
     def _on_add_obstacle_event(self):

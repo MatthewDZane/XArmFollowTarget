@@ -2,6 +2,7 @@ import socket
 import math
 mysocket = socket.socket()
 mysocket.connect(('127.0.0.1',12345))
+# mysocket.connect(('192.168.4.209',12345))
 
 def close_socket(thissocket):
     try:
