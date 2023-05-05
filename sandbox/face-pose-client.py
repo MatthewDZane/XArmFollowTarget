@@ -5,6 +5,23 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
+import socket
+
+# open socket to omniverse machine
+mysocket = socket.socket()
+# mysocket.connect(('127.0.0.1',12345))
+mysocket.connect(('192.168.4.209',12345))
+
+
+def close_socket(thissocket):
+    try:
+        thissocket.shutdown(socket.SHUT_RDWR)
+        thissocket.close()
+        thissocket = None
+    except socket.error as e:
+        pass
+    print("socket is closed")
+
 
 mp_face_mesh = mp.solutions.face_mesh
 
@@ -39,6 +56,8 @@ while cap.isOpened():
 	img_h, img_w, img_c = image.shape
 	face_3d = []
 	face_2d = []
+	nose_norm = []
+	
 
 	if results.multi_face_landmarks:
 		for face_landmarks in results.multi_face_landmarks:
@@ -46,6 +65,7 @@ while cap.isOpened():
 				if idx == 33 or idx == 263 or idx == 1 or idx == 61 or idx == 291 or idx == 199:
 					if idx == 1:
 						nose_2d = (lm.x * img_w, lm.y * img_h)
+						nose_norm = (lm.x, lm.y)
 						nose_3d = (lm.x * img_w, lm.y * img_h, lm.z * 3000)
 
 					x, y = int(lm.x * img_w), int(lm.y * img_h)
@@ -126,11 +146,18 @@ while cap.isOpened():
 			connections=mp_face_mesh.FACEMESH_CONTOURS,
 			landmark_drawing_spec = drawing_spec,
 			connection_drawing_spec=drawing_spec)
+		try:
+			sendData = str([x, y, z, nose_norm[0], nose_norm[1]])
+			mysocket.send(sendData.encode())
+		except:
+			pass
 
 	cv2.imshow('Head Pose Estimation', image)
 
 	if cv2.waitKey(5) & 0xFF == 27:
 		break
+
+close_socket(mysocket)
 
 cap.release()
 
