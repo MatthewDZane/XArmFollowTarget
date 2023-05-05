@@ -103,9 +103,20 @@ class XArmSample(BaseSample):
             
             try:
                 data = self._conn.recv(1024, 0x40) # non-blocking receive
-                if data:
-                    message = data.decode()
-                    print("received:", message)
+                message = data.decode()
+                print("received:", message)
+                if message:
+                    x, y, z, dx, dy = exec(message)
+                    print("received:", x, y, z, dx, dy)
+
+                    cube = self._world.get_object("target")
+                    pos, _ = cube.get_world_pose()
+                    newpose = [ pos[0], pos[1]+dy, pos[2]+dx]
+                    newpose[1] = np.clip(newpose[1], self._safe_zone[0][1], self._safe_zone[1][1])
+                    newpose[2] = np.clip(newpose[2], self._safe_zone[0][2], self._safe_zone[1][2])
+                    print("newpose:", newpose)
+                    # cube.set_world_pose(np.array(newpose))
+
             except:
                 # didn't receive anything
                 pass
