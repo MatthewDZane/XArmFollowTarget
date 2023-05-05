@@ -2,6 +2,7 @@ from omni.isaac.examples.base_sample import BaseSample
 from omni.isaac.examples.user_examples.XArm.xarm_follow_target import XArmFollowTarget
 from omni.isaac.examples.user_examples.XArm.xarm_rmpflow_controller import XArmRMPFlowController
 import numpy as np
+import ast
 import threading
 import socket
 import carb
@@ -13,6 +14,11 @@ class XArmSample(BaseSample):
         self._articulation_controller = None
         self._socket = None
         self._conn = None
+
+        self._safe_zone = [
+            (0.3, -0.3, 0.3), # back bottom right 
+            (0.5, 0.3, 0.625) # top front left
+                           ]
 
     def setup_scene(self):
         world = self.get_world()
@@ -99,7 +105,21 @@ class XArmSample(BaseSample):
             try:
                 data = self._conn.recv(1024, 0x40) # non-blocking receive
                 message = data.decode()
-                print("received:", message)
+                print("received:", type(message), message)
+                try:
+                    x, y, z, dx, dy = ast.literal_eval(message)
+                    print("received:", x, y, z, dx, dy)
+                    world = self.get_world()
+                    cube = world.get_object("target")
+                    pos, _ = cube.get_world_pose()
+                    newpose = [ pos[0], pos[1]+dy, pos[2]+dx]
+                    newpose[1] = np.clip(newpose[1], self._safe_zone[0][1], self._safe_zone[1][1])
+                    newpose[2] = np.clip(newpose[2], self._safe_zone[0][2], self._safe_zone[1][2])
+                    print("newpose:", newpose)
+                except:
+                    print("eval failed")
+                # cube.set_world_pose(np.array(newpose))
+
             except:
                 # didn't receive anything
                 pass
