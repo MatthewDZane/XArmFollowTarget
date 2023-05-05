@@ -38,6 +38,14 @@ class XArmFollowTarget(tasks.FollowTarget):
             if self._task_achieved:
                 carb.log_info("Target Reached")
                 self._cube.get_applied_visual_material().set_color(color=np.array([0, 1.0, 0]))
+                # set new location
+                randpos = [
+                    np.random.uniform(0.3, 0.5), 
+                    np.random.uniform(-0.3, 0.3),
+                    np.random.uniform(0.3, 0.625)
+                    ]
+                carb.log_info("Setting new target pos:"+str(randpos))
+                self._cube.set_world_pose(np.array(randpos))
             else:
                 self._cube.get_applied_visual_material().set_color(color=np.array([0, 0, 1.0]))
         return

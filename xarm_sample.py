@@ -14,6 +14,11 @@ class XArmSample(BaseSample):
         self._socket = None
         self._conn = None
 
+        self._safe_zone = [
+            (0.3, -0.3, 0.3), # back bottom right 
+            (0.5, 0.3, 0.625) # top front left
+                           ]
+
     def setup_scene(self):
         world = self.get_world()
         world.add_task(XArmFollowTarget(world))
@@ -98,8 +103,9 @@ class XArmSample(BaseSample):
             
             try:
                 data = self._conn.recv(1024, 0x40) # non-blocking receive
-                message = data.decode()
-                print("received:", message)
+                if data:
+                    message = data.decode()
+                    print("received:", message)
             except:
                 # didn't receive anything
                 pass
