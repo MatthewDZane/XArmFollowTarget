@@ -39,6 +39,7 @@ while cap.isOpened():
 	img_h, img_w, img_c = image.shape
 	face_3d = []
 	face_2d = []
+	nose_norm = []
 
 	if results.multi_face_landmarks:
 		for face_landmarks in results.multi_face_landmarks:
@@ -46,6 +47,7 @@ while cap.isOpened():
 				if idx == 33 or idx == 263 or idx == 1 or idx == 61 or idx == 291 or idx == 199:
 					if idx == 1:
 						nose_2d = (lm.x * img_w, lm.y * img_h)
+						nose_norm = (lm.x, lm.y)
 						nose_3d = (lm.x * img_w, lm.y * img_h, lm.z * 3000)
 
 					x, y = int(lm.x * img_w), int(lm.y * img_h)
@@ -110,8 +112,12 @@ while cap.isOpened():
 			cv2.putText(image, text, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
 			cv2.putText(image, "x: "+str(np.round(x, 2)), (500, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
 			cv2.putText(image, "y: "+str(np.round(y, 2)), (500, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-			cv2.putText(image, "z: "+str(np.round(z, 2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-
+			cv2.putText(image, "z: "+str(np.round(z, 2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)			
+			xdiff = nose_norm[0]-0.5
+			ydiff = 0.5-nose_norm[1]
+			cv2.putText(image, "xdiff: "+str(np.round(xdiff, 2)), (500, 250), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+			cv2.putText(image, "ydiff: "+str(np.round(ydiff, 2)), (500, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+		
 		end = time.time()
 		totalTime = end-start
 
@@ -126,6 +132,13 @@ while cap.isOpened():
 			connections=mp_face_mesh.FACEMESH_CONTOURS,
 			landmark_drawing_spec = drawing_spec,
 			connection_drawing_spec=drawing_spec)
+
+		# try:
+		# 	print("sending:", [x, y, z, xdiff, ydiff])
+		# 	sendData = str([x, y, z, nose_norm[0], nose_norm[1]])
+		# 	mysocket.send(sendData.encode())
+		# except:
+		# 	pass
 
 	cv2.imshow('Head Pose Estimation', image)
 
