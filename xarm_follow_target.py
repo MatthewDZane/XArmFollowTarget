@@ -47,7 +47,7 @@ class XArmFollowTarget(tasks.FollowTarget):
                     np.random.uniform(0.3, 0.625)
                     ]
                 carb.log_info("Setting new target pos:"+str(randpos))
-                # self._cube.set_world_pose(np.array(randpos))
+                self._cube.set_world_pose(np.array(randpos))
                 # self._cube.set_world_pose(np.array(randpos), np.array([180.0, 90, -180]))
             else:
                 self._cube.get_applied_visual_material().set_color(color=np.array([0, 0, 1.0]))
