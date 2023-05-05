@@ -95,6 +95,14 @@ class XArmSample(BaseSample):
             except:
                 # if sending failed, recreate the socket and reconnect
                 self._setup_socket()
+            
+            try:
+                data = self._conn.recv(1024, 0x40) # non-blocking receive
+                message = data.decode()
+                print("received:", message)
+            except:
+                # didn't receive anything
+                pass
         return
 
     def _on_add_obstacle_event(self):

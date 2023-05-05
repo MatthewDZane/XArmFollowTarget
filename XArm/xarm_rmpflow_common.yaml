@@ -84,10 +84,6 @@ body_cylinders:
       pt1: [0,0,.333]
       pt2: [0,0,0.]
       radius: .05
-    - name: base_tree
-      pt1: [0,0,.333]
-      pt2: [0,0,.333]
-      radius: .15
 
 # Each arm is approx. 1m from (arm) base to gripper center.
 # .1661 between links (approx .15)
