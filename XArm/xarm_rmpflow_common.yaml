@@ -38,7 +38,7 @@ rmp_params:
         damping_gain: 1000.0
         metric_weight: 100. # metric_scalar
     target_rmp:
-        accel_p_gain: 30. #100.
+        accel_p_gain: 50. #100.
         accel_d_gain: 85.
         accel_norm_eps: .075
         metric_alpha_length_scale: .05

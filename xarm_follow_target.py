@@ -38,16 +38,17 @@ class XArmFollowTarget(tasks.FollowTarget):
         if not self._task_achieved is bool(dist < 0.02):
             self._task_achieved = bool(dist < 0.02)
             if self._task_achieved:
-                carb.log_info("Target Reached")
+                print("Target Reached")
                 self._cube.get_applied_visual_material().set_color(color=np.array([0, 1.0, 0]))
+
                 # set new location
-                randpos = [
-                    np.random.uniform(0.3, 0.5), 
-                    np.random.uniform(-0.3, 0.3),
-                    np.random.uniform(0.3, 0.625)
-                    ]
-                carb.log_info("Setting new target pos:"+str(randpos))
-                self._cube.set_world_pose(np.array(randpos))
+                # randpos = [
+                #     np.random.uniform(0.3, 0.5), 
+                #     np.random.uniform(-0.3, 0.3),
+                #     np.random.uniform(0.3, 0.625)
+                #     ]
+                # print("Setting new target pos:"+str(randpos))
+                # self._cube.set_world_pose(np.array(randpos))
                 # self._cube.set_world_pose(np.array(randpos), np.array([180.0, 90, -180]))
             else:
                 self._cube.get_applied_visual_material().set_color(color=np.array([0, 0, 1.0]))

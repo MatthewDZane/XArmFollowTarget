@@ -12,43 +12,90 @@ class XArmSample(BaseSample):
         super().__init__()
         self._controller = None
         self._articulation_controller = None
-        self._socket = None
-        self._conn = None
+        # sending position data to arm
+        self._txsocket = None
+        self._txconn = None
+        
+        # tracking info
+        self._rxsocket = None
+        self._rxconn = None
 
         self._safe_zone = [
             (0.3, -0.3, 0.3), # back bottom right 
             (0.5, 0.3, 0.625) # top front left
                            ]
+        
+        self._dx = None
+        self._dy = None
+
 
     def setup_scene(self):
         world = self.get_world()
         world.add_task(XArmFollowTarget(world))
         return
     
-    def _setup_socket(self):
-        if self._socket is None:
-            self._socket = socket.socket()
+    def _setup_txsocket(self):
+        if self._txsocket is None:
+            self._txsocket = socket.socket()
             # allow socket to reuse address
-            self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            port = 12345
-            self._socket.bind(('', port))
+            self._txsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            txport = 12345
+            self._txsocket.bind(('', txport))
         
         # https://docs.python.org/3/library/socket.html#socket.socket.listen
-        self._socket.listen(5) # number of unaccepted connections allow (backlog)
-        self._conn, self.addr = self._socket.accept()
+        self._txsocket.listen(5) # number of unaccepted connections allow (backlog)
+        
+        while True:
+            self._txconn, self._txaddr = self._txsocket.accept()
+            print("accepted tx connection from:",str(self._txaddr[0]), ":", str(self._txaddr[1]))
 
-        if self._xarm:
-            if self._xarm.get_joint_positions() is not None:
-                sendData = str(self._xarm.get_joint_positions().tolist())
-                self._conn.send(sendData.encode())
+    def _setup_rxsocket(self):
+        if self._rxsocket is None:
+            self._rxsocket = socket.socket()
+            # allow socket to reuse address
+            self._rxsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            rxport = 12346
+            self._rxsocket.bind(('', rxport))
+        
+        # https://docs.python.org/3/library/socket.html#socket.socket.listen
+        self._rxsocket.listen(5) # number of unaccepted connections allow (backlog)
+        
+        while True:
+            self._rxconn, self._rxaddr = self._rxsocket.accept()
+            print("accepted rx connection from:",str(self._rxaddr[0]), ":", str(self._rxaddr[1]))
+
+            while True:
+                data = self._rxconn.recv(1024)
+                if data:
+                    message = data.decode()
+                    # print("received:", type(message), message)
+                    x, y, z, dx, dy = ast.literal_eval(message)
+                    # print("received:", x, y, z, dx, dy)
+                    weight = 0.1
+                    self._dx = weight*dx
+                    self._dy = weight*dy
+                else:
+                    break
+                # else:
+                    # break
+                # didn't receive anything
+
 
     def _shut_down_socket(self):
-        if self._conn:
+        if self._txconn:
             try:
                 # self._conn.send("Done".encode())
-                self._socket.shutdown(socket.SHUT_RDWR)
-                self._socket.close()
-                self._socket = None
+                self._txsocket.shutdown(socket.SHUT_RDWR)
+                self._txsocket.close()
+                self._txsocket = None
+            except socket.error as e:
+                pass
+        if self._rxconn:
+            try:
+                # self._conn.send("Done".encode())
+                self._rxsocket.shutdown(socket.SHUT_RDWR)
+                self._rxsocket.close()
+                self._rxsocket = None
             except socket.error as e:
                 pass
 
@@ -71,8 +118,11 @@ class XArmSample(BaseSample):
         self._controller = XArmRMPFlowController(name="target_follower_controller", robot_articulation=self._xarm)
         self._articulation_controller = self._xarm.get_articulation_controller()
 
-        self._socket_thread = threading.Thread(target=self._setup_socket)
-        self._socket_thread.start()
+        self._txsocket_thread = threading.Thread(target=self._setup_txsocket)
+        self._txsocket_thread.start()
+
+        self._rxsocket_thread = threading.Thread(target=self._setup_rxsocket)
+        self._rxsocket_thread.start()
         return
 
     async def _on_follow_target_event_async(self, val):
@@ -94,35 +144,52 @@ class XArmSample(BaseSample):
         self._articulation_controller.set_gains(1e15*np.ones(7), 1e14*np.ones(7)) # Solution from Nvidia Live Session 1:23:00
         self._articulation_controller.apply_action(actions)
 
-        sendData = str(self._xarm.get_joint_positions().tolist())
-        if (self._conn):
+        if (self._txconn):
             try: 
-                self._conn.send(sendData.encode())
+                sendData = str(self._xarm.get_joint_positions().tolist())
+                res = self._txconn.send(sendData.encode())
+                if res == 0:
+                    print("channel is closed...")
             except:
                 # if sending failed, recreate the socket and reconnect
-                self._setup_socket()
-            
-            try:
-                data = self._conn.recv(1024, 0x40) # non-blocking receive
-                message = data.decode()
-                print("received:", type(message), message)
-                try:
-                    x, y, z, dx, dy = ast.literal_eval(message)
-                    print("received:", x, y, z, dx, dy)
-                    world = self.get_world()
-                    cube = world.get_object("target")
-                    pos, _ = cube.get_world_pose()
-                    newpose = [ pos[0], pos[1]+dy, pos[2]+dx]
-                    newpose[1] = np.clip(newpose[1], self._safe_zone[0][1], self._safe_zone[1][1])
-                    newpose[2] = np.clip(newpose[2], self._safe_zone[0][2], self._safe_zone[1][2])
-                    print("newpose:", newpose)
-                except:
-                    print("eval failed")
-                # cube.set_world_pose(np.array(newpose))
+                print("sending failed... closing connection")
+                self._txconn.close()
+                self._txconn = None
 
-            except:
-                # didn't receive anything
-                pass
+        # update position of target?
+        if self._dx and self._dy:
+            world = self.get_world()
+            cube = world.scene.get_object("target")
+            pos, _ = cube.get_world_pose()
+            newpose = [ pos[0], pos[1]+self._dx, pos[2]+self._dy]
+            newpose[1] = np.clip(newpose[1], self._safe_zone[0][1], self._safe_zone[1][1])
+            newpose[2] = np.clip(newpose[2], self._safe_zone[0][2], self._safe_zone[1][2])
+            print("pose", pos, "->", newpose, end="")
+            cube.set_world_pose(np.array(newpose))
+            print("set.")
+            self._dx = None
+            self._dy = None
+
+        # if (self._rxconn):
+        #     try:
+        #         data = self._rxconn.recv(1024, 0x40) # non-blocking receive
+        #         message = data.decode()
+        #         print("received:", type(message), message)
+        #         x, y, z, dx, dy = ast.literal_eval(message)
+        #         print("received:", x, y, z, dx, dy)
+        #         world = self.get_world()
+        #         cube = world.get_object("target")
+        #         pos, _ = cube.get_world_pose()
+        #         newpose = [ pos[0], pos[1]+dy, pos[2]+dx]
+        #         newpose[1] = np.clip(newpose[1], self._safe_zone[0][1], self._safe_zone[1][1])
+        #         newpose[2] = np.clip(newpose[2], self._safe_zone[0][2], self._safe_zone[1][2])
+        #         print("newpose:", newpose)
+        #         cube.set_world_pose(np.array(newpose))
+        #     except:
+        #         # didn't receive anything
+                
+        #         pass
+
         return
 
     def _on_add_obstacle_event(self):
