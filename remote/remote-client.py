@@ -25,7 +25,7 @@ arm.motion_enable(enable=True)
 arm.set_mode(0)
 arm.set_state(state=0)
 
-arm.reset(wait=True)
+# arm.reset(wait=True)
 
 arm.set_mode(1)
 arm.set_state(0)
