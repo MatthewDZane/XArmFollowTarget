@@ -6,10 +6,20 @@ import mediapipe as mp
 import numpy as np
 import time
 import socket
+import sys
 
-# open socket to omniverse machine
-mysocket = socket.socket()
-mysocket.connect(('192.168.4.209',12346))
+bSocket = True
+
+if (len(sys.argv) > 1):
+	print(sys.argv)
+	if sys.argv[1] == "--no-socket":
+		bSocket = False
+
+
+if bSocket:
+	# open socket to omniverse machine
+	mysocket = socket.socket()
+	mysocket.connect(('192.168.4.209',12346))
 
 
 def close_socket(thissocket):
@@ -70,6 +80,8 @@ try:
 							nose_3d = (lm.x * img_w, lm.y * img_h, lm.z * 3000)
 
 						x, y = int(lm.x * img_w), int(lm.y * img_h)
+				
+						cv2.circle(image, (x, y), 10, (0, 0, 255), -1)
 
 						face_2d.append([x, y])
 
@@ -151,12 +163,14 @@ try:
 				connections=mp_face_mesh.FACEMESH_CONTOURS,
 				landmark_drawing_spec = drawing_spec,
 				connection_drawing_spec=drawing_spec)
-			try:
-				print("sending:", [x, y, z, xdiff, ydiff])
-				sendData = str([x, y, z, xdiff, ydiff])
-				mysocket.send(sendData.encode())
-			except:
-				pass
+
+			if bSocket:
+				try:
+					print("sending:", [x, y, z, xdiff, ydiff])
+					sendData = str([x, y, z, xdiff, ydiff])
+					mysocket.send(sendData.encode())
+				except:
+					pass
 
 		cv2.imshow('Head Pose Estimation', image)
 
@@ -164,7 +178,9 @@ try:
 			break
 except KeyboardInterrupt:
 	print("quitting")
-close_socket(mysocket)
+
+if bSocket:
+	close_socket(mysocket)
 
 cap.release()
 
