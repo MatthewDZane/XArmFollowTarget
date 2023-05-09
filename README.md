@@ -1,4 +1,7 @@
-1. Clone the repo
+1. Clone the repo. It is best to clone this into the omni.isaac.examples\omni\isaac\examples\user_examples folder.
+```
+git clone https://gitlab.nrp-nautilus.io/isaac/xarm.git XArm
+```
 
 2. place in this path to run:
 ```
