@@ -2,7 +2,6 @@ from .xarm import XArm
 import numpy as np
 import omni.isaac.core.tasks as tasks
 from omni.isaac.core.utils.stage import get_stage_units
-import carb
 
 
 class XArmFollowTarget(tasks.FollowTarget):
@@ -16,8 +15,8 @@ class XArmFollowTarget(tasks.FollowTarget):
             target_orientation (Optional[np.ndarray], optional): [description]. Defaults to None.
         """
 
-    def __init__(self, name):
-        super().__init__(name=name, target_position=np.array([0.3, 0.0, 0.5]) / get_stage_units(), offset=None)
+    def __init__(self):
+        super().__init__(name="xarm_follow_target_task", target_position=np.array([0.3, 0.0, 0.5]) / get_stage_units(), offset=None)
         self._goal_position = np.array([0, 0, 0])
         self._task_achieved = False
         return
