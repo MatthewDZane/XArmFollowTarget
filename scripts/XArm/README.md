@@ -1,25 +1,20 @@
-# 
-1. Clone the repo.
+# Using XArm Follow Target as an Isaac Example
+1. cd into the Isaac Sim User examples directory.
 ```
-git clone https://gitlab.nrp-nautilus.io/isaac/xarm.git
-```
-
-2. place in this path to run:
-```
-/home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples
+/home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/exts/omni.isaac.examples/omni/isaac/examples/user_examples/
 ```
 
-3. Rename the folder **xarm/** to **XArm/**
-
-4. In the examples folder you will need to add 2 lines to the **__init__.py** file there (not in the XArm folder) 
-
-
-NOTE: Import here your extension examples to be propagated to ISAAC SIM Extensions startup
+2. Clone the repo as XArmFollowTarget.
 ```
-from omni.isaac.examples.user_examples.XArm.xarm_sample import XArmSample
-from omni.isaac.examples.user_examples.XArm.xarm_extension import XArmExtension
+git clone https://gitlab.nrp-nautilus.io/isaac/xarm.git XArmFollowTarget
 ```
 
-5.  After this runs you should see the XArm extension in the Example drop down in the Isaac-sim gui
+3. Add the following lines to the .../user_examples/__init__.py file (not in the repo directory):
+```
+from omni.isaac.examples.user_examples.XArmFollowTarget.scripts.XArm.xarm_sample import XArmSample
+from omni.isaac.examples.user_examples.XArmFollowTarget.scripts.XArm.xarm_extension import XArmExtension
+```
 
-6. To recieve the position output run the **client.py** script found in the folder, the **server.py** runs by default once the example is loaded. 
+4.  After this runs you should see the XArm extension in the Example drop down in the Isaac-sim gui
+
+5. To recieve the position output run the **client.py** script found in the folder, the **server.py** runs by default once the example is loaded. 
