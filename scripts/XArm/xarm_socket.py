@@ -1,6 +1,7 @@
 import ast
 import socket
 import threading
+import carb
 
 class XArmSocket():
     def __init__(self) -> None:
@@ -68,10 +69,8 @@ class XArmSocket():
                     self.dx = weight*dx
                     self.dy = weight*dy
                 else:
-                    break
-                # else:
-                    # break
-                # didn't receive anything
+                    self.dx = None
+                    self.dy = None
 
 
     def shut_down_socket(self):
