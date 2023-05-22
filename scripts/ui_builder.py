@@ -16,27 +16,13 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 import omni.ui as ui
 import omni.timeline
-from omni.usd import StageEventType
 
-from omni.isaac.core.utils.prims import is_prim_path_valid
-from omni.isaac.core.articulations import Articulation
-from omni.isaac.core.utils.stage import add_reference_to_stage, create_new_stage
 from omni.isaac.core.world import World
-
-from omni.isaac.core.utils.nucleus import get_assets_root_path
-from omni.isaac.core.objects.cuboid import FixedCuboid
-import numpy as np
-
 from omni.isaac.ui.ui_utils import get_style, btn_builder, state_btn_builder
-
-from omni.isaac.ui.element_wrappers import CollapsableFrame, StateButton
-from omni.isaac.ui.element_wrappers.core_connectors import LoadButton, ResetButton
+from omni.usd import StageEventType
 
 from .XArm.xarm_sample import XArmSample
 import asyncio
-
-import carb
-
 
 class UIBuilder:
     def __init__(self):
@@ -89,8 +75,9 @@ class UIBuilder:
         if self._sample._world is not None:
             self._sample._world_cleanup()
         if self._buttons is not None:
-            self._buttons["Load World"].enabled = True
             self._enable_all_buttons(False)
+            self._buttons["Load XArm5"].enabled = True
+            self._buttons["Load XArm7"].enabled = True
         self.shutdown_cleanup()
         return
 
@@ -101,18 +88,27 @@ class UIBuilder:
         """
         self._buttons = {}
         self._task_ui_elements = {}
-        world_controls_frame = CollapsableFrame(title="World Controls", collapsed=False)
+        world_controls_frame = ui.CollapsableFrame(title="World Controls", collapsed=False)
         with world_controls_frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
                 dict = {
-                    "label": "Load World",
+                    "label": "Load XArm5",
                     "type": "button",
                     "text": "Load",
-                    "tooltip": "Load World and Task",
-                    "on_clicked_fn": self._on_load_world,
+                    "tooltip": "Load XArm5 and Task",
+                    "on_clicked_fn": self._on_load_xarm5,
                 }
-                self._buttons["Load World"] = btn_builder(**dict)
-                self._buttons["Load World"].enabled = True
+                self._buttons["Load XArm5"] = btn_builder(**dict)
+                self._buttons["Load XArm5"].enabled = True
+                dict = {
+                    "label": "Load XArm7",
+                    "type": "button",
+                    "text": "Load",
+                    "tooltip": "Load XArm7 and Task",
+                    "on_clicked_fn": self._on_load_xarm7,
+                }
+                self._buttons["Load XArm7"] = btn_builder(**dict)
+                self._buttons["Load XArm7"].enabled = True
                 dict = {
                     "label": "Reset",
                     "type": "button",
@@ -124,7 +120,7 @@ class UIBuilder:
                 self._buttons["Reset"].enabled = False
         
         
-        task_controls_frame = CollapsableFrame(title="Task Controls", collapsed=False)
+        task_controls_frame = ui.CollapsableFrame(title="Task Controls", collapsed=False)
         with task_controls_frame:
             with ui.VStack(spacing=5):
                 task_controls_frame.visible = True
@@ -161,13 +157,30 @@ class UIBuilder:
                 self._task_ui_elements["Remove Obstacle"] = btn_builder(**dict)
                 self._task_ui_elements["Remove Obstacle"].enabled = False
 
-    def _on_load_world(self):
+    def _on_load_xarm5(self):
+        self._sample.set_xarm_version(5)
+
         async def _on_load_world_async():
             await self._sample.load_world_async()
             await omni.kit.app.get_app().next_update_async()
             self._sample._world.add_stage_callback("stage_event_1", self.on_stage_event)
             self._enable_all_buttons(True)
-            self._buttons["Load World"].enabled = False
+            self._buttons["Load XArm5"].enabled = False
+            self.post_load_button_event()
+            self._sample._world.add_timeline_callback("stop_reset_event", self._reset_on_stop_event)
+
+        asyncio.ensure_future(_on_load_world_async())
+        return
+    
+    def _on_load_xarm7(self):
+        self._sample.set_xarm_version(7)
+
+        async def _on_load_world_async():
+            await self._sample.load_world_async()
+            await omni.kit.app.get_app().next_update_async()
+            self._sample._world.add_stage_callback("stage_event_1", self.on_stage_event)
+            self._enable_all_buttons(True)
+            self._buttons["Load XArm7"].enabled = False
             self.post_load_button_event()
             self._sample._world.add_timeline_callback("stop_reset_event", self._reset_on_stop_event)
 
@@ -209,18 +222,6 @@ class UIBuilder:
         asyncio.ensure_future(self._sample._on_follow_target_event_async(val))
         return
 
-    def _on_add_obstacle_button_event(self):
-        self._sample._on_add_obstacle_event()
-        self._task_ui_elements["Remove Obstacle"].enabled = True
-        return
-
-    def _on_remove_obstacle_button_event(self):
-        self._sample._on_remove_obstacle_event()
-        world = self._sample.get_world()
-        current_task = list(world.get_current_tasks().values())[0]
-        if not current_task.obstacles_exist():
-            self._task_ui_elements["Remove Obstacle"].enabled = False
-        return
 
     def _on_save_data_button_event(self):
         self._sample._on_save_data_event(self._task_ui_elements["Output Directory"].get_value_as_string())
@@ -265,12 +266,14 @@ class UIBuilder:
                 if hasattr(self, "_buttons"):
                     if self._buttons is not None:
                         self._enable_all_buttons(False)
-                        self._buttons["Load World"].enabled = True
+                        self._buttons["Load XArm5"].enabled = True
+                        self._buttons["Load XArm7"].enabled = True
         return
     
     def _reset_on_stop_event(self, e):
         if e.type == int(omni.timeline.TimelineEventType.STOP):
-            self._buttons["Load World"].enabled = False
+            #self._buttons["Load XArm5"].enabled = False
+            #self._buttons["Load XArm7"].enabled = False
             self._buttons["Reset"].enabled = True
             self.post_clear_button_event()
         return 

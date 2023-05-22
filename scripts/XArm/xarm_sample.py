@@ -4,13 +4,14 @@ from .xarm_rmpflow_controller import XArmRMPFlowController
 from .xarm_socket import XArmSocket
 import numpy as np
 import time
-import carb
 
 class XArmSample(BaseSample):
     def __init__(self) -> None:
         super().__init__()
         self._controller = None
         self._articulation_controller = None
+        self._xarm_version = None
+
         # sending position data to arm
         self.xarm_socket = XArmSocket()
 
@@ -21,12 +22,23 @@ class XArmSample(BaseSample):
         self._last_face_seen_timeout = 1
         self._last_face_seen_time = 0 
 
-        self._last_rand_target_timeout = 50
+        self._last_rand_target_timeout = 5
         self._last_rand_target_time = 0 
+
+    def set_xarm_version(self, xarm_version):
+        self._xarm_version = xarm_version
+        if self._xarm_version == 5:
+            self._max_range = 0.6
+            self._min_range = 0.35
+            self._min_height = 0.15
+        elif self._xarm_version == 7:
+            self._max_range = 0.7
+            self._min_range = 0.3
+            self._min_height = 0.1           
 
     def setup_scene(self):
         world = self.get_world()
-        world.add_task(XArmFollowTarget())
+        world.add_task(XArmFollowTarget(self._xarm_version))
         return
 
     async def setup_pre_reset(self):
@@ -45,7 +57,11 @@ class XArmSample(BaseSample):
         self._xarm_task = list(self._world.get_current_tasks().values())[0]
         self._task_params = self._xarm_task.get_params()
         self._xarm = self._world.scene.get_object(self._task_params["robot_name"]["value"])
-        self._controller = XArmRMPFlowController(name="target_follower_controller", robot_articulation=self._xarm)
+        self._controller = XArmRMPFlowController(
+            name="target_follower_controller", 
+            robot_articulation=self._xarm,
+            xarm_version=self._xarm_version
+        )
         self._articulation_controller = self._xarm.get_articulation_controller()
 
         self.xarm_socket.start_txsocket()
@@ -69,10 +85,13 @@ class XArmSample(BaseSample):
             target_end_effector_orientation=observations[self._task_params["target_name"]["value"]]["orientation"],
         )
         
-        self._articulation_controller.set_gains(1e15*np.ones(7), 1e14*np.ones(7)) # Solution from Nvidia Live Session 1:23:00
+        self._articulation_controller.set_gains(
+            1e15*np.ones(self._xarm_version), 
+            1e14*np.ones(self._xarm_version)
+        ) # Solution from Nvidia Live Session 1:23:00
         self._articulation_controller.apply_action(actions)
 
-        if (self.xarm_socket.txconn):
+        if self.xarm_socket.txconn:
             try: 
                 sendData = str(self._xarm.get_joint_positions().tolist())
                 res = self._txconn.send(sendData.encode())
@@ -84,11 +103,11 @@ class XArmSample(BaseSample):
                 self.xarm_socket.txconn.close()
                 self.xarm_socket.txconn = None
 
-        # update position of target?
+
         current_time = time.time()
         if self.xarm_socket.dx and self.xarm_socket.dy:
-            world = self.get_world()
-            cube = world.scene.get_object("target")
+            # update position of target from camera feed
+            cube = self._world.scene.get_object("target")
             pos, _ = cube.get_world_pose()
             newpose = [pos[0], pos[1] + self.xarm_socket.dx, pos[2] + self.xarm_socket.dy]
             range = np.linalg.norm(newpose)
@@ -112,9 +131,8 @@ class XArmSample(BaseSample):
                 self._xarm_task.task_achieved or \
                 current_time > self._last_rand_target_time + self._last_rand_target_timeout \
             ) and current_time > self._last_face_seen_time + self._last_face_seen_timeout:
-                # set new location
-                world = self.get_world()
-                cube = world.scene.get_object("target")
+                # set random location
+                cube = self._world.scene.get_object("target")
                 randpos = [
                     np.random.uniform(-1, 1), 
                     np.random.uniform(-1, 1),

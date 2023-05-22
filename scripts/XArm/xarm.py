@@ -21,15 +21,24 @@ class XArm(Robot):
         self,
         prim_path: str,
         name: str = "xarm_robot",
+        version: Optional[int] = 7,
         position: Optional[np.ndarray] = None,
         orientation: Optional[np.ndarray] = None
     ) -> None:
         self._end_effector = None
 
         current_directory = str(pathlib.Path(__file__).parent.resolve()).replace("\\", "/")
-        add_reference_to_stage(usd_path=current_directory + "/XArm/xarm.usd", prim_path=prim_path)
 
-        self._end_effector_prim_path = prim_path + "/link7"
+        if version == 5:
+            relative_usd_path = "/XArm/XArm5/xarm5.usd"
+            end_link = "/link5"
+        elif version == 7:
+            relative_usd_path = "/XArm/XArm7/xarm7.usd"
+            end_link = "/link7"
+
+        add_reference_to_stage(usd_path=current_directory + relative_usd_path, prim_path=prim_path)
+
+        self._end_effector_prim_path = prim_path + end_link
 
         super().__init__(
             prim_path=prim_path, name=name, position=position, orientation=orientation, articulation_controller=None
