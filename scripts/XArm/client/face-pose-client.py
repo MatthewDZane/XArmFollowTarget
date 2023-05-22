@@ -19,7 +19,8 @@ if (len(sys.argv) > 1):
 if bSocket:
 	# open socket to omniverse machine
 	mysocket = socket.socket()
-	mysocket.connect(('192.168.4.209',12346))
+	#mysocket.connect(('192.168.1.62',12346))
+	mysocket.connect(('127.0.0.1',12346))
 
 
 def close_socket(thissocket):
@@ -40,8 +41,8 @@ mp_drawing = mp.solutions.drawing_utils
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
-# cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
+#cap = cv2.VideoCapture(1)
 
 try: 
 	while cap.isOpened():

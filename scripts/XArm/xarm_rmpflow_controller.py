@@ -13,15 +13,31 @@ class XArmRMPFlowController(mg.MotionPolicyController):
         """
 
     def __init__(
-        self, name: str, robot_articulation: Articulation, physics_dt: float = 1.0 / 60.0
+        self, 
+        name: str, 
+        robot_articulation: Articulation, 
+        physics_dt: float = 1.0 / 60.0, 
+        xarm_version: int = 7
     ) -> None:
         current_directory = str(pathlib.Path(__file__).parent.resolve()).replace("\\", "/")
 
+        if xarm_version == 5:
+            relative_robot_description_path = "/XArm/XArm5/xarm5_descriptor.yaml"
+            relative_urdf_path = "/XArm/XArm5/xarm5.urdf"
+            relative_rmpflow_config_path = "/XArm/XArm5/xarm5_rmpflow_common.yaml"
+            end_effector_frame_name = "link5"
+        elif xarm_version == 7:
+            relative_robot_description_path = "/XArm/XArm7/xarm7_descriptor.yaml"
+            relative_urdf_path = "/XArm/XArm7/xarm7.urdf"
+            relative_rmpflow_config_path = "/XArm/XArm7/xarm7_rmpflow_common.yaml"
+            end_effector_frame_name = "link7"
+
+
         self.rmp_flow = mg.lula.motion_policies.RmpFlow(
-            robot_description_path=current_directory + "/XArm/xarm_descriptor.yaml",
-            urdf_path=current_directory + "/XArm/xarm.urdf",
-            rmpflow_config_path=current_directory + "/XArm/xarm_rmpflow_common.yaml",
-            end_effector_frame_name="link7",
+            robot_description_path=current_directory + relative_robot_description_path,
+            urdf_path=current_directory + relative_urdf_path,
+            rmpflow_config_path=current_directory + relative_rmpflow_config_path,
+            end_effector_frame_name=end_effector_frame_name,
             maximum_substep_size=0.0334,
             ignore_robot_state_updates=False,
         )

@@ -3,8 +3,8 @@ import math
 import time
 
 mysocket = socket.socket()
-# mysocket.connect(('127.0.0.1',12345))
-mysocket.connect(('192.168.4.209',12345))
+mysocket.connect(('127.0.0.1',12345))
+# mysocket.connect(('192.168.4.209',12345))
 
 
 """
@@ -36,7 +36,7 @@ params = {'speed': 100, 'acc': 2000, 'angle_speed': 20, 'angle_acc': 500, 'event
 
 
 # Register error/warn changed callback
-def error_warn_change_callback(data):
+def error_warn_change_callback(data):#
     if data and data['error_code'] != 0:
         params['quit'] = True
         pprint('err={}, quit'.format(data['error_code']))
