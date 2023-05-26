@@ -130,6 +130,7 @@ class XArmSample(BaseSample):
             self.xarm_socket.dy = None
 
             self._last_face_seen_time = current_time
+            
         elif self.rand_target_enabled and ( \
                 self._xarm_task.task_achieved or \
                 current_time > self._last_rand_target_time + self._last_rand_target_timeout \
@@ -151,8 +152,8 @@ class XArmSample(BaseSample):
 
                 updated_quaternion = self._get_new_target_orientation(randpos)
 
-                print("Setting new target pos:"+str(randpos))
-                cube.set_world_pose(np.array(randpos), updated_quaternion)
+                # print("Setting new target pos:"+str(randpos))
+                # cube.set_world_pose(np.array(randpos), updated_quaternion)
 
                 self._last_rand_target_time = time.time()
         return
