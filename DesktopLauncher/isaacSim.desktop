@@ -1,0 +1,20 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Comment[en_US]=
+Comment=
+Exec=/home/user/.local/share/ov/pkg/isaac_sim-2022.2.1/isaac-sim.sh --allow-root
+GenericName[en_US]=
+GenericName=
+Icon=/home/user/isaac/xarm/DesktopLauncher/isaacSim.png
+MimeType=
+Name=isaacSim
+Path=
+StartupNotify=true
+Terminal=true
+TerminalOptions=
+Type=Application
+Version=1.0
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
