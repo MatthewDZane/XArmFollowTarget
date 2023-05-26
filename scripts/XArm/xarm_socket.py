@@ -62,9 +62,9 @@ class XArmSocket():
                 data = self.rxconn.recv(1024)
                 if data:
                     message = data.decode()
-                    # print("received:", type(message), message)
+                    print("received:", type(message), message)
                     x, y, z, dx, dy = ast.literal_eval(message)
-                    # print("received:", x, y, z, dx, dy)
+                    print("received:", x, y, z, dx, dy)
                     weight = 0.1
                     self.dx = weight*dx
                     self.dy = weight*dy

@@ -94,7 +94,7 @@ class XArmSample(BaseSample):
         if self.xarm_socket.txconn:
             try: 
                 sendData = str(self._xarm.get_joint_positions().tolist())
-                res = self._txconn.send(sendData.encode())
+                res = self.xarm_socket.txconn.send(sendData.encode())
                 if res == 0:
                     print("channel is closed...")
             except:
@@ -148,8 +148,8 @@ class XArmSample(BaseSample):
 
                 updated_quaternion = self._get_new_target_orientation(randpos)
 
-                print("Setting new target pos:"+str(randpos))
-                cube.set_world_pose(np.array(randpos), updated_quaternion)
+                # print("Setting new target pos:"+str(randpos))
+                # cube.set_world_pose(np.array(randpos), updated_quaternion)
 
                 self._last_rand_target_time = time.time()
         return
