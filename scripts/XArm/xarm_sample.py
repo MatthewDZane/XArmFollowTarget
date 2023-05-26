@@ -4,6 +4,7 @@ from .xarm_rmpflow_controller import XArmRMPFlowController
 from .xarm_socket import XArmSocket
 import numpy as np
 import time
+import carb
 
 class XArmSample(BaseSample):
     def __init__(self) -> None:
@@ -15,12 +16,14 @@ class XArmSample(BaseSample):
         # sending position data to arm
         self.xarm_socket = XArmSocket()
 
-        self._max_range = 0.7
-        self._min_range = 0.3
-        self._min_height = 0.1
+        self._max_range = None
+        self._min_range = None
+        self._min_height = None
 
         self._last_face_seen_timeout = 1
         self._last_face_seen_time = 0 
+
+        self.rand_target_enabled = True
 
         self._last_rand_target_timeout = 5
         self._last_rand_target_time = 0 
@@ -28,9 +31,9 @@ class XArmSample(BaseSample):
     def set_xarm_version(self, xarm_version):
         self._xarm_version = xarm_version
         if self._xarm_version == 5:
-            self._max_range = 0.6
-            self._min_range = 0.35
-            self._min_height = 0.15
+            self._max_range = 0.7
+            self._min_range = 0.3
+            self._min_height = 0.1
         elif self._xarm_version == 7:
             self._max_range = 0.7
             self._min_range = 0.3
@@ -127,7 +130,7 @@ class XArmSample(BaseSample):
             self.xarm_socket.dy = None
 
             self._last_face_seen_time = current_time
-        elif ( \
+        elif self.rand_target_enabled and ( \
                 self._xarm_task.task_achieved or \
                 current_time > self._last_rand_target_time + self._last_rand_target_timeout \
             ) and current_time > self._last_face_seen_time + self._last_face_seen_timeout:
