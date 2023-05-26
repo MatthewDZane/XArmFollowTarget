@@ -2,6 +2,7 @@ from .xarm import XArm
 import numpy as np
 import omni.isaac.core.tasks as tasks
 from omni.isaac.core.utils.stage import get_stage_units
+import carb
 
 
 class XArmFollowTarget(tasks.FollowTarget):

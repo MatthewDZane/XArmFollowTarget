@@ -6,7 +6,7 @@ import omni.ui as ui
 from omni.usd import StageEventType
 from omni.isaac.core import World
 from omni.isaac.examples.base_sample import BaseSampleExtension
-from omni.isaac.ui.ui_utils import btn_builder, get_style, state_btn_builder, setup_ui_headers
+from omni.isaac.ui.ui_utils import btn_builder, get_style, state_btn_builder, setup_ui_headers, cb_builder
 
 from .xarm_sample import XArmSample
 
@@ -133,8 +133,18 @@ class XArmExtension(BaseSampleExtension):
                         self._task_ui_elements["Remove Obstacle"] = btn_builder(**dict)
                         self._task_ui_elements["Remove Obstacle"].enabled = False
 
+                        dict = {
+                            "label": "Random Target Enabled",
+                            "type": "checkbox",
+                            "default_val": True,
+                            "tooltip": "Random Target Enabled",
+                            "on_clicked_fn": self._on_random_target_enabled_event
+                        }
+                        self._task_ui_elements["Random Target Checkbox"] = cb_builder(**dict)
+
     def _on_load_xarm5(self):
-        self._sample.xarm_version = 5
+        self._sample.set_xarm_version(7)
+        self._on_random_target_enabled_event(False)
 
         async def _on_load_world_async():
             await self._sample.load_world_async()
@@ -142,6 +152,7 @@ class XArmExtension(BaseSampleExtension):
             self._sample._world.add_stage_callback("stage_event_1", self.on_stage_event)
             self._enable_all_buttons(True)
             self._buttons["Load XArm5"].enabled = False
+            self._buttons["Load XArm7"].enabled = False
             self.post_load_button_event()
             self._sample._world.add_timeline_callback("stop_reset_event", self._reset_on_stop_event)
 
@@ -149,13 +160,15 @@ class XArmExtension(BaseSampleExtension):
         return
     
     def _on_load_xarm7(self):
-        self._sample.xarm_version = 7
+        self._sample.set_xarm_version(7)
+        self._on_random_target_enabled_event(False)
 
         async def _on_load_world_async():
             await self._sample.load_world_async()
             await omni.kit.app.get_app().next_update_async()
             self._sample._world.add_stage_callback("stage_event_1", self.on_stage_event)
             self._enable_all_buttons(True)
+            self._buttons["Load XArm5"].enabled = False
             self._buttons["Load XArm7"].enabled = False
             self.post_load_button_event()
             self._sample._world.add_timeline_callback("stop_reset_event", self._reset_on_stop_event)
@@ -188,6 +201,9 @@ class XArmExtension(BaseSampleExtension):
         if not current_task.obstacles_exist():
             self._task_ui_elements["Remove Obstacle"].enabled = False
         return
+    
+    def _on_random_target_enabled_event(self, val):
+        self._sample.rand_target_enabled = self._task_ui_elements["Random Target Checkbox"].get_value_as_bool()
     
     def _enable_all_buttons(self, flag):
         for btn_name, btn in self._buttons.items():

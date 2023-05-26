@@ -62,6 +62,7 @@ class XArmSocket():
                 data = self.rxconn.recv(1024)
                 if data:
                     message = data.decode()
+                    # carb.log_error("received:" + str(type(message)) + message)
                     print("received:", type(message), message)
                     x, y, z, dx, dy = ast.literal_eval(message)
                     print("received:", x, y, z, dx, dy)
