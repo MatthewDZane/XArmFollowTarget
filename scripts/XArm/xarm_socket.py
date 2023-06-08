@@ -64,8 +64,11 @@ class XArmSocket():
                     message = data.decode()
                     # carb.log_error("received:" + str(type(message)) + message)
                     print("received:", type(message), message)
-                    x, y, z, dx, dy = ast.literal_eval(message)
-                    print("received:", x, y, z, dx, dy)
+                    try:
+                        x, y, z, dx, dy, dist = ast.literal_eval(message)
+                    except ValueError:
+                        continue
+                    print("received:", x, y, z, dx, dy, dist)
                     weight = 0.1
                     self.dx = weight*dx
                     self.dy = weight*dy
