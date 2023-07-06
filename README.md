@@ -8,7 +8,8 @@
 Port Forwar local ports to the Container for the realsense camera client. 
 - once you have a XGL container running you will need to use the kubernetes CLI to get the specific pod name. This can be done with 
 
-``` kubecle get pods -n <your namespace>
+```
+ kubecle get pods -n <your namespace>
 ```
 once you have your pod name we can now prot forward the local ports to the container for communication, 
 
