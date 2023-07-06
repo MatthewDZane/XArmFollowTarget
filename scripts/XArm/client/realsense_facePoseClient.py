@@ -44,16 +44,17 @@ drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 bSocket = True
 
 if (len(sys.argv) > 1):
-	print(sys.argv)
-	if sys.argv[1] == "--no-socket":
-		bSocket = False
+    print(sys.argv)
+    if sys.argv[1] == "--no-socket":
+        bSocket = False
 
 
 if bSocket:
-	# open socket to omniverse machine
-	mysocket = socket.socket()
-	#mysocket.connect(('192.168.1.62',12346))
-	mysocket.connect(('127.0.0.1',12346))
+    # open socket to omniverse machine
+    mysocket = socket.socket()
+    # mysocket.connect(('192.168.1.62',12346))
+    mysocket.connect(('192.168.4.206',12346))
+    # mysocket.connect(('127.0.0.1',12346))
 
 
 def close_socket(thissocket):
@@ -168,6 +169,7 @@ while True:
     depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
     images = cv2.flip(background_removed,1)
+    # images = background_removed
     color_image = cv2.flip(color_image,1)
     color_images_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
     
@@ -261,12 +263,16 @@ while True:
             p2 = (int(nose_pixel[0] + y_degrees * 10), int(nose_pixel[1] - x_degrees * 10))
             cv2.line(color_images_rgb, (int(nose_pixel[0]), int(nose_pixel[1])), p2, (255, 0, 0), 3)
 
+            # cv2.line(images, (int(nose_pixel[0]), int(nose_pixel[1])), p2, (255, 0, 0), 3)
+
+
             face_direction = estimate_plane_normal(face_3d)
-            print(nose_distance)
+            print(nose_distance, end="\t")
             ##vector of Nose in camera local space
-            #print(cam_to_nose.flatten())
+            print(cam_to_nose.flatten(), end="\t")
             ##Normal of the face in camera local space
-            #print(face_direction.flatten())
+            print(face_direction.flatten(), end="\t")
+            print(nose_pixel)
 
             # add the text on the image
             cv2.putText(color_images_rgb, text, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
@@ -279,12 +285,12 @@ while True:
             cv2.putText(color_images_rgb, "xdiff: "+str(np.round(xdiff, 2)), (500, 250), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
             images = cv2.putText(color_images_rgb, "ydiff: "+str(np.round(ydiff, 2)), (500, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
 
-        mp_drawing.draw_landmarks(
-            image=color_images_rgb,
-            landmark_list=face_landmarks,
-            connections=mp_face_mesh.FACEMESH_CONTOURS,
-            landmark_drawing_spec = drawing_spec,
-            connection_drawing_spec=drawing_spec)
+        # mp_drawing.draw_landmarks(
+        #     image=color_images_rgb,
+        #     landmark_list=face_landmarks,
+        #     connections=mp_face_mesh.FACEMESH_CONTOURS,
+        #     landmark_drawing_spec = drawing_spec,
+        #     connection_drawing_spec=drawing_spec)
         
         if bSocket:
             cam_to_nose = cam_to_nose.flatten()
@@ -309,7 +315,12 @@ while True:
 
     # Display images 
     cv2.namedWindow(name_of_window, cv2.WINDOW_AUTOSIZE)
-    cv2.imshow(name_of_window, images)
+    
+    output_bgr = cv2.cvtColor(color_images_rgb, cv2.COLOR_RGB2BGR)
+    cv2.imshow(name_of_window, output_bgr)
+
+    # cv2.imshow(name_of_window, images)
+    # cv2.imshow(name_of_window, color_image)
     key = cv2.waitKey(1)
     # Press esc or 'q' to close the image window
     if key & 0xFF == ord('q') or key == 27:
