@@ -19,8 +19,9 @@ if (len(sys.argv) > 1):
 if bSocket:
 	# open socket to omniverse machine
 	mysocket = socket.socket()
-	#mysocket.connect(('192.168.1.62',12346))
-	mysocket.connect(('127.0.0.1',12346))
+	mysocket.connect(('192.168.4.206',12346)) # robert's local machine
+	# mysocket.connect(('192.168.1.62',12346))
+	# mysocket.connect(('127.0.0.1',12346))
 
 
 def close_socket(thissocket):
@@ -41,8 +42,8 @@ mp_drawing = mp.solutions.drawing_utils
 
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
-cap = cv2.VideoCapture(0)
-#cap = cv2.VideoCapture(1)
+# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 try: 
 	while cap.isOpened():
@@ -51,6 +52,7 @@ try:
 		start = time.time()
 
 		image = cv2.cvtColor(cv2.flip(image, -1), cv2.COLOR_BGR2RGB)
+		# image = cv2.cvtColor(cv2.flip(image, -2), cv2.COLOR_BGR2RGB)
 
 		# improve performance
 		image.flags.writeable = False
