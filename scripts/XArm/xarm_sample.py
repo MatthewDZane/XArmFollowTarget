@@ -5,6 +5,7 @@ from .xarm_socket import XArmSocket
 import numpy as np
 import time
 import carb
+from pyquaternion import Quaternion
 
 class XArmSample(BaseSample):
     def __init__(self) -> None:
@@ -27,6 +28,9 @@ class XArmSample(BaseSample):
 
         self._last_rand_target_timeout = 5
         self._last_rand_target_time = 0 
+
+        self.min_detection_range = None
+        self.max_detection_range = None
 
     def set_xarm_version(self, xarm_version):
         self._xarm_version = xarm_version
@@ -97,7 +101,7 @@ class XArmSample(BaseSample):
         if self.xarm_socket.txconn:
             try: 
                 sendData = str(self._xarm.get_joint_positions().tolist())
-                res = self.xarm_socket.txconn.send(sendData.encode())
+                res = self._txconn.send(sendData.encode())
                 if res == 0:
                     print("channel is closed...")
             except:
@@ -106,13 +110,32 @@ class XArmSample(BaseSample):
                 self.xarm_socket.txconn.close()
                 self.xarm_socket.txconn = None
 
+        face_in_range = False
+        if self.xarm_socket.cam_to_nose and self.xarm_socket.face_direction:
+            cam_position, cam_orientation = self._xarm.end_effector.get_world_pose()
+            
+            nose_distance_from_camera = np.linalg.norm(self.xarm_socket.cam_to_nose)
+            carb.log_error(str(self.min_detection_range) + " " + str(self.max_detection_range) + " " + str(nose_distance_from_camera))
+            face_in_range = nose_distance_from_camera >= self.min_detection_range and nose_distance_from_camera <= self.max_detection_range
 
         current_time = time.time()
-        if self.xarm_socket.dx and self.xarm_socket.dy:
+        if face_in_range:
+            carb.log_error("here")
+            cam_orientation = Quaternion(cam_orientation)
+            nose_position = cam_orientation.rotate(self.xarm_socket.cam_to_nose) + cam_position
+            nose_direction = cam_orientation.rotate(self.xarm_socket.face_direction)
+            nose_direction /= np.linalg.norm(nose_direction)
+
             # update position of target from camera feed
             cube = self._world.scene.get_object("target")
-            pos, _ = cube.get_world_pose()
-            newpose = [pos[0], pos[1] + self.xarm_socket.dx, pos[2] + self.xarm_socket.dy]
+
+            if nose_distance_from_camera < self.min_detection_range:
+                newpose = nose_position + nose_direction * self.min_detection_range
+            elif nose_distance_from_camera > self.max_detection_range:
+                newpose = nose_position + nose_direction * self.max_detection_range
+            else:
+                newpose = nose_position + nose_direction * nose_distance_from_camera
+
             range = np.linalg.norm(newpose)
             if range < self._min_range:
                 newpose = newpose / np.linalg.norm(newpose) * self._min_range
@@ -123,14 +146,11 @@ class XArmSample(BaseSample):
 
             updated_quaternion = self._get_new_target_orientation(newpose)
             
-            print("pose", pos, "->", newpose, end="")
-            cube.set_world_pose(np.array(newpose))
-            print("set.")
+            cube.set_world_pose(np.array(newpose), updated_quaternion)
             self.xarm_socket.dx = None
             self.xarm_socket.dy = None
 
             self._last_face_seen_time = current_time
-            
         elif self.rand_target_enabled and ( \
                 self._xarm_task.task_achieved or \
                 current_time > self._last_rand_target_time + self._last_rand_target_timeout \
@@ -152,10 +172,12 @@ class XArmSample(BaseSample):
 
                 updated_quaternion = self._get_new_target_orientation(randpos)
 
-                # print("Setting new target pos:"+str(randpos))
-                # cube.set_world_pose(np.array(randpos), updated_quaternion)
+                print("Setting new target pos:"+str(randpos))
+                cube.set_world_pose(np.array(randpos), updated_quaternion)
 
                 self._last_rand_target_time = time.time()
+        self.xarm_socket.cam_to_nose=None
+        self.xarm_socket.face_direction=None
         return
 
     def _on_add_obstacle_event(self):
@@ -201,9 +223,10 @@ class XArmSample(BaseSample):
         data_logger = world.get_data_logger()
         data_logger.save(log_path=log_path)
         data_logger.reset()
+        return
     
     def _get_new_target_orientation(self, position):
-        direction_vector = np.array([0, 0, 0]) - position
+        direction_vector = np.array([0, 0, 0.3]) - position
         normalized_direction = direction_vector / np.linalg.norm(direction_vector)
 
         rotation_axis = np.cross(np.array([0, 0, -1]), normalized_direction)

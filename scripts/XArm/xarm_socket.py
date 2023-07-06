@@ -13,8 +13,10 @@ class XArmSocket():
         self.rxsocket = None
         self.rxconn = None
 
-        self.dx = 0
-        self.dy = 0
+        self.cam_to_nose = None
+        self.face_direction = None
+        self.dx = None
+        self.dy = None
 
         # threads
         self.txsocket_thread = None
@@ -63,13 +65,25 @@ class XArmSocket():
                 if data:
                     message = data.decode()
                     # carb.log_error("received:" + str(type(message)) + message)
-                    print("received:", type(message), message)
-                    x, y, z, dx, dy = ast.literal_eval(message)
-                    print("received:", x, y, z, dx, dy)
-                    weight = 0.1
-                    self.dx = weight*dx
-                    self.dy = weight*dy
+                    cam_to_nose = [0, 0, 0]
+                    face_direction = [0, 0, 0]
+                    try:
+                        cam_to_nose[0], cam_to_nose[1], cam_to_nose[2], face_direction[0], face_direction[1], face_direction[2], dx, dy = ast.literal_eval(message)
+                    except ValueError:
+                        self.cam_to_nose = None
+                        self.face_direction = None
+                        self.dx = None
+                        self.dy = None
+                    else: 
+                    # print("received:", x, y, z, dx, dy, dist)
+                        weight = 0.1
+                        self.cam_to_nose = cam_to_nose
+                        self.face_direction = face_direction
+                        self.dx = weight*dx
+                        self.dy = weight*dy
                 else:
+                    self.cam_to_nose = None
+                    self.face_direction = None
                     self.dx = None
                     self.dy = None
 

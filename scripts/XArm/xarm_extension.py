@@ -6,7 +6,7 @@ import omni.ui as ui
 from omni.usd import StageEventType
 from omni.isaac.core import World
 from omni.isaac.examples.base_sample import BaseSampleExtension
-from omni.isaac.ui.ui_utils import btn_builder, get_style, state_btn_builder, setup_ui_headers, cb_builder
+from omni.isaac.ui.ui_utils import btn_builder, get_style, state_btn_builder, setup_ui_headers, cb_builder, float_builder
 
 from .xarm_sample import XArmSample
 
@@ -40,7 +40,7 @@ class XArmExtension(BaseSampleExtension):
         return
 
     def _build_ui(
-            self, name, title, doc_link, overview, file_path, number_of_extra_frames, window_width, keep_window_open
+        self, name, title, doc_link, overview, file_path, number_of_extra_frames, window_width, keep_window_open
     ):
         """
         Build a custom UI tool to run your extension.  
@@ -136,15 +136,34 @@ class XArmExtension(BaseSampleExtension):
                         dict = {
                             "label": "Random Target Enabled",
                             "type": "checkbox",
-                            "default_val": True,
+                            "default_val": False,
                             "tooltip": "Random Target Enabled",
                             "on_clicked_fn": self._on_random_target_enabled_event
                         }
                         self._task_ui_elements["Random Target Checkbox"] = cb_builder(**dict)
 
+                        args = {
+                            "label": "Min Face Range",
+                            "default_val": .3,
+                            "tooltip": "Min Range in Meters",
+                        }
+                        self._task_ui_elements["Min Face Range"] = float_builder(**args)
+                        self._task_ui_elements["Min Face Range"].add_value_changed_fn(self._on_min_face_range_changed_event)
+
+                        args = {
+                            "label": "Max Face Range",
+                            "default_val": 10,
+                            "tooltip": "Max Range in Meters",
+                        }
+                        self._task_ui_elements["Max Face Range"] = float_builder(**args)
+                        self._task_ui_elements["Max Face Range"].add_value_changed_fn(self._on_max_face_range_changed_event)
+                        
+
     def _on_load_xarm5(self):
-        self._sample.set_xarm_version(7)
+        self._sample.set_xarm_version(5)
         self._on_random_target_enabled_event(False)
+        self._on_min_face_range_changed_event(self._task_ui_elements["Min Face Range"].get_value_as_float())
+        self._on_max_face_range_changed_event(self._task_ui_elements["Max Face Range"].get_value_as_float())
 
         async def _on_load_world_async():
             await self._sample.load_world_async()
@@ -162,6 +181,8 @@ class XArmExtension(BaseSampleExtension):
     def _on_load_xarm7(self):
         self._sample.set_xarm_version(7)
         self._on_random_target_enabled_event(False)
+        self._on_min_face_range_changed_event(self._task_ui_elements["Min Face Range"].get_value_as_float())
+        self._on_max_face_range_changed_event(self._task_ui_elements["Max Face Range"].get_value_as_float())
 
         async def _on_load_world_async():
             await self._sample.load_world_async()
@@ -204,6 +225,12 @@ class XArmExtension(BaseSampleExtension):
     
     def _on_random_target_enabled_event(self, val):
         self._sample.rand_target_enabled = self._task_ui_elements["Random Target Checkbox"].get_value_as_bool()
+
+    def _on_min_face_range_changed_event(self, val):
+        self._sample.min_detection_range = self._task_ui_elements["Min Face Range"].get_value_as_float()
+
+    def _on_max_face_range_changed_event(self, val):
+        self._sample.min_detection_range = self._task_ui_elements["Max Face Range"].get_value_as_float()
     
     def _enable_all_buttons(self, flag):
         for btn_name, btn in self._buttons.items():
