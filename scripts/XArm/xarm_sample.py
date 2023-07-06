@@ -5,6 +5,9 @@ from .xarm_socket import XArmSocket
 import numpy as np
 import time
 import carb
+import omni.kit.pipapi
+omni.kit.pipapi.install("pyquaternion")
+
 from pyquaternion import Quaternion
 
 class XArmSample(BaseSample):
@@ -101,10 +104,12 @@ class XArmSample(BaseSample):
         if self.xarm_socket.txconn:
             try: 
                 sendData = str(self._xarm.get_joint_positions().tolist())
-                res = self._txconn.send(sendData.encode())
+                #print("joints:", sendData)
+                res = self.xarm_socket.txconn.send(sendData.encode())
                 if res == 0:
                     print("channel is closed...")
-            except:
+            except Exception as e:
+                print(e)
                 # if sending failed, recreate the socket and reconnect
                 print("sending failed... closing connection")
                 self.xarm_socket.txconn.close()
